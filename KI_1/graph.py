@@ -10,6 +10,10 @@ class Node:
         self.edges = []
         self.value = 0
 
+    def getName(self):    #return name of node
+        return self.name
+
+
 
 class Edge:
 
@@ -17,6 +21,10 @@ class Edge:
         self.start = edge[0]
         self.end = edge[1]
         self.value = edge[2]
+    def getEnd(self):
+        return self.end
+    def getStart(self):
+        return self.start
 
 
 class Graph:
@@ -34,13 +42,22 @@ class Graph:
             self.nodes[next((i for i, v in enumerate(
                 self.nodes) if v.name == e[1].name), -1)].edges.append(Edge((e[1], e[0], e[2])))
 
+
+
     def getAdjacent(self, node):
         nameList = []
-        for i, v in enumerate(self.nodes):
-            if v.name == node:
-                for i2, v2 in enumerate(v.edges):
-                    nameList.append(v2.end.name)
+        for x in self.nodes:
+            if x == node:
+                for adjacent in x.edges:
+                    nameList.append(adjacent.end)
         return nameList
+    
+    def getNode(self, name):    #name of node gives Node object back
+        for v in self.nodes:
+            if v.name == name:
+                return v
+        return None
+    
 
     def print(self):
         node_list = self.nodes
