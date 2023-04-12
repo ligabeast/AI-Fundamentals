@@ -10,10 +10,6 @@ class Node:
         self.edges = []
         self.value = 0
 
-    def getName(self):    #return name of node
-        return self.name
-
-
 
 class Edge:
 
@@ -21,10 +17,6 @@ class Edge:
         self.start = edge[0]
         self.end = edge[1]
         self.value = edge[2]
-    def getEnd(self):
-        return self.end
-    def getStart(self):
-        return self.start
 
 
 class Graph:
@@ -42,8 +34,6 @@ class Graph:
             self.nodes[next((i for i, v in enumerate(
                 self.nodes) if v.name == e[1].name), -1)].edges.append(Edge((e[1], e[0], e[2])))
 
-
-
     def getAdjacent(self, node):
         nameList = []
         for x in self.nodes:
@@ -51,13 +41,20 @@ class Graph:
                 for adjacent in x.edges:
                     nameList.append(adjacent.end)
         return nameList
-    
-    def getNode(self, name):    #name of node gives Node object back
+
+    def getWeight(self, start, end):  # Parameter given as Strings not objects
+        objStart = self.getNode(start)
+        for element in self.nodes:
+            if (element == objStart):
+                for element2 in element.edges:
+                    if (element2.end.name == end or element2.start.name == end):
+                        return element2.value
+
+    def getNode(self, name):  # name of node gives Node object back
         for v in self.nodes:
             if v.name == name:
                 return v
         return None
-    
 
     def print(self):
         node_list = self.nodes
