@@ -88,7 +88,7 @@ class Node:
 
     def getAdjacetsWhichNotMarked(self, prototypeEdge):
         for edges in self.romania.nodes:
-            if edges.name == prototypeEdge.end:
+            if edges.name == prototypeEdge:
                 source = edges.name
                 adjacets = []
                 for edge in edges.edges:
@@ -144,7 +144,7 @@ class Node:
 
             self.updateStart(node)
 
-            for adjacent in self.getAdjacetsWhichNotMarked(node):
+            for adjacent in self.getAdjacetsWhichNotMarked(node.end):
                 self.visitable.push(graph.Edge(
                     [node.start.copy(), adjacent.end, adjacent.value]))
 
@@ -188,15 +188,36 @@ class Node:
 
             self.updateStart(edge)
 
-            for adjacent in self.getAdjacetsWhichNotMarked(edge):
+            for adjacent in self.getAdjacetsWhichNotMarked(edge.end):
                 self.visitable.push(graph.Edge(
                     [edge.start.copy(), adjacent.end, adjacent.value+edge.value]))
 
     def aStar(self, start, end):
         g = {start: 0}
         parent = {start: start}
-        open = Queue('prio')
-        open.push(graph.Node(start))
+        self.visitable = Queue('prio')
+        self.visitable.push(graph.Node(start))
+        self.explored = set()
+        self.path = []
+
+
+        while(not self.visitable.empty()):
+            current = self.visitable.pop()
+            if(current == start):
+                return True
+            self.explored.add(current.name)
+            for adjacent in self.getAdjacetsWhichNotMarked(current.name):
+                if (not adjacent.end in self.explored and not adjacent.end in self.visitable):
+                    g = {current.name: float('inf')}
+                    parent = {current: None}
+                if(g[current.name]+self.romania.getWeight(current.name, adjacent.name) < g[adjacent.name]):
+                    g[adjacent.name] = g[current.name] + self.romania.getWeight(current.name, adjacent.name)
+                    parent[adjacent.name] = current.name
+                    if(adjacent.name in self.visitable):
+                        node = self.visitable.pop(adjacent)
+                        node.value = g[adjacent.name]
+                        self.visitable.push(node)
+
 
 
 test = Node()
@@ -208,6 +229,9 @@ test.printPath()
 print("-------")
 test.UCS('Bu', 'Ti')
 test.printPath()
+print("-------")
+test.aStar('Bu', 'Ti')
+test.printExplored()
 
 
 # test = Queue('prio')
