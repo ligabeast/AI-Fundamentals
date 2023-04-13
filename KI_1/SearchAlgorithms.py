@@ -113,7 +113,7 @@ class Node:
 
     def getPathCost(self):
         sum = 0
-        for i in range(0, len(self.path) - 2):
+        for i in range(0, len(self.path) - 1):
             sum += self.romania.getWeight(self.path[i], self.path[i+1])
         return sum
 
@@ -191,6 +191,12 @@ class Node:
             for adjacent in self.getAdjacetsWhichNotMarked(edge):
                 self.visitable.push(graph.Edge(
                     [edge.start.copy(), adjacent.end, adjacent.value+edge.value]))
+
+    def aStar(self, start, end):
+        g = {start: 0}
+        parent = {start: start}
+        open = Queue('prio')
+        open.push(graph.Node(start))
 
 
 test = Node()

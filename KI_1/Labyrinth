@@ -1,0 +1,99 @@
+import pygame
+import math
+
+
+class Grid:
+    grid = None
+
+    def __init__(self, width, height):
+        self.grid = [[0]*width for i in range(height)]
+        self.grid[9][4] = None
+        self.grid[9][5] = None
+        self.grid[9][6] = None
+        self.grid[9][7] = None
+        self.grid[9][8] = None
+        self.grid[9][9] = None
+        self.grid[9][9] = None
+        self.grid[10][9] = None
+        self.grid[11][9] = None
+        self.grid[12][9] = None
+        self.grid[13][9] = None
+        self.grid[14][9] = None
+        self.grid[15][9] = None
+        self.grid[16][9] = None
+        self.grid[17][9] = None
+        self.grid[18][9] = None
+        self.grid[19][9] = None
+        self.grid[0][16] = None
+        self.grid[1][16] = None
+        self.grid[2][16] = None
+        self.grid[3][16] = None
+        self.grid[4][16] = None
+        self.grid[5][16] = None
+        self.grid[6][16] = None
+        self.grid[7][16] = None
+        self.grid[8][16] = None
+        self.grid[9][16] = None
+
+    def setField(self, x, y, value):
+        self.grid[x][y] = value
+
+    def getField(self, x, y):
+        return self.grid[x][y]
+
+
+# Define some colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+WIDTH = 47
+HEIGHT = 47
+MARGIN = 3
+
+gameField = Grid(20, 20)
+# ---
+# Initialize your classes etc.here
+# ---
+
+pygame.init()
+
+size = (1000, 1000)
+screen = pygame.display.set_mode(size)
+
+pygame.display.set_caption("My Game")
+
+done = False
+
+clock = pygame.time.Clock()
+
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+
+    # ---
+# The code here ist called once per clock tick
+# Let your algorithm loop here
+# ---
+        for row in range(20):
+            for column in range(20):
+                color = WHITE
+                if gameField.getField(row, column) == 1:
+                    color = GREEN
+                elif (gameField.getField(row, column) == None):
+                    color = BLACK
+
+                pygame.draw.rect(screen,
+                                 color,
+                                 [(MARGIN + WIDTH) * column + MARGIN,
+                                  (MARGIN + HEIGHT) * row + MARGIN,
+                                     WIDTH,
+                                     HEIGHT])
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
