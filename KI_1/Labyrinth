@@ -2,66 +2,147 @@ import pygame
 import math
 import graph
 import SearchAlgorithms
+import time
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+PURPLE = (128, 0, 128)
+
+
+class Field:
+    def __init__(self, row, col, margin, height, width, total_rows):
+        self.row = row
+        self.col = col
+        self.x = row * width
+        self.y = col * width
+        self.color = WHITE
+        self.neighbors = []
+        self.width = width
+        self.height = height
+        self.margin = margin
+        self.total_rows = total_rows
+    
+    def get_pos(self):
+        return (self.row, self.col)
+
+    def is_closed(self):
+        return self.color == RED
+    
+    def is_open(self):
+        return self.color == GREEN
+
+    def is_barrier(self):
+        return self.color == BLACK
+
+    def is_start(self):
+        return self.color == BLUE
+
+    def is_end(self):
+        return self.color == BLUE
+
+    def reset(self):
+        self.color = WHITE
+
+    def make_start(self):
+        self.color = BLUE
+
+    def make_closed(self):
+        self.color = RED
+
+    def make_open(self):
+        self.color = GREEN
+    
+    def make_barrier(self):
+        self.color = BLACK
+
+    def make_end(self):
+        self.color = BLUE
+
+    def make_path(self):
+        self.color = PURPLE
+
+    def draw(self, win):
+        pygame.draw.rect(win,self.color,[(self.margin + self.width) * self.col + self.margin,(self.margin + self.height) * self.row + self.margin,self.width,self.height])
+
+    def update_neighbors(self, grid):
+        self.neighbors = []
+        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # DOWN
+            self.neighbors.append(grid[self.row + 1][self.col])
+
+        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # UP
+            self.neighbors.append(grid[self.row - 1][self.col])
+
+        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # RIGHT
+            self.neighbors.append(grid[self.row][self.col + 1])
+
+        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # LEFT
+            self.neighbors.append(grid[self.row][self.col - 1])
+
+    def __lt__(self, other):
+        return False
+
+    def reconstruct_path(came_from, current, draw):
+        while current in came_from:
+            current = came_from[current]
+            current.make_path()
+            draw()
 
 
 class Grid:
-
-    def __init__(self, width, height):
-        self.height = height
+    def __init__(self, rows, margin, heigth, width, start, end, win):
+        self.rows = rows;
+        self.height = width
+        self.grid = []
+        self.margin = margin
+        self.heigth = heigth
         self.width = width
-        start = (19,0)
-        end = (0,19)
+        self.win = win
 
-        self.grid = [[0]*width for i in range(height)]
-        self.grid[9][4] = None
-        self.grid[9][5] = None
-        self.grid[9][6] = None
-        self.grid[9][7] = None
-        self.grid[9][8] = None
-        self.grid[9][9] = None
-        self.grid[9][9] = None
-        self.grid[10][9] = None
-        self.grid[11][9] = None
-        self.grid[12][9] = None
-        self.grid[13][9] = None
-        self.grid[14][9] = None
-        self.grid[15][9] = None
-        self.grid[16][9] = None
-        self.grid[17][9] = None
-        self.grid[18][9] = None
-        self.grid[19][9] = None
-        self.grid[0][16] = None
-        self.grid[1][16] = None
-        self.grid[2][16] = None
-        self.grid[3][16] = None
-        self.grid[4][16] = None
-        self.grid[5][16] = None
-        self.grid[6][16] = None
-        self.grid[7][16] = None
-        self.grid[8][16] = None
-        self.grid[9][16] = None
+        for i in range(rows):
+            self.grid.append([])
+            for j in range(rows):
+                field = Field(i, j, margin, heigth, width,rows)
+                self.grid[i].append(field)
 
-    def setField(self, x, y, value):
-        self.grid[x][y] = value
+        self.start = self.grid[start[0]][start[1]]
+        self.end = self.grid[end[0]][end[1]]
 
-    def getField(self, x, y):
-        return self.grid[x][y]
+        self.start.make_start()
+        self.end.make_end()
 
-    def getAdjacetsWhichNotMarked(self,coordinates, explored):
-        adjacent = []
-        possible = [(coordinates[0] + 1, coordinates[1]),
-                    (coordinates[0] - 1, coordinates[1]),
-                    (coordinates[0], coordinates[1] + 1),
-                    (coordinates[0], coordinates[1] - 1)]
-        for element in possible:
-            if(not element in explored and element[0] >= 0 and element[0] < self.width and element[1] >= 0 and element[1] < self.height):
-                adjacent.append(element)
-        return adjacent
+        self.grid[9][4].make_barrier()
+        self.grid[9][5].make_barrier()
+        self.grid[9][6].make_barrier()
+        self.grid[9][7].make_barrier()
+        self.grid[9][8].make_barrier()
+        self.grid[9][9].make_barrier()
+        self.grid[9][9].make_barrier()
+        self.grid[10][9].make_barrier()
+        self.grid[11][9].make_barrier()
+        self.grid[12][9].make_barrier()
+        self.grid[13][9].make_barrier()
+        self.grid[14][9].make_barrier()
+        self.grid[15][9].make_barrier()
+        self.grid[16][9].make_barrier()
+        self.grid[17][9].make_barrier()
+        self.grid[18][9].make_barrier()
+        self.grid[19][9].make_barrier()
+        self.grid[0][16].make_barrier()
+        self.grid[1][16].make_barrier()
+        self.grid[2][16].make_barrier()
+        self.grid[3][16].make_barrier()
+        self.grid[4][16].make_barrier()
+        self.grid[5][16].make_barrier()
+        self.grid[6][16].make_barrier()
+        self.grid[7][16].make_barrier()
+        self.grid[8][16].make_barrier()
+        self.grid[9][16].make_barrier()
     
-    def getLength(self, node):
-        eins = ((node[0] - self.end[0])**2)
-        zwei = ((self.end[1] - node[1])**2)
-        return  math.sqrt(eins + zwei)
+    def getLength(self, node):  #heuristic function
+        return  math.sqrt(((node.row - self.end.row)**2) + ((self.end.col - node.col)**2))
     
     def getNumberOfCellsInPath(self, node, parent):
         current = node
@@ -71,19 +152,30 @@ class Grid:
             current = parent[current]
         return increment
 
-    def aStar(self):
-        g = {(self.start[0], self.start[1]): 0}
-        parent = {(self.start[0], self.start[1]): (self.start[0], self.start[1])}
+    def getAdjacetsWhichNotMarked(self,coordinates, explored):
+        adjacent = []
+        possible = [(coordinates[0] + 1, coordinates[1]), 
+                    (coordinates[0] - 1, coordinates[1]),
+                    (coordinates[0], coordinates[1] + 1),
+                    (coordinates[0], coordinates[1] - 1)]
+        for element in possible:
+            if(not element in explored and element[0] >= 0 and element[0] < self.width and element[1] >= 0 and element[1] < self.height):
+                adjacent.append(element)
+        return adjacent
 
-        for x in range(self.width):
-            for y in range(self.height):
-                if((x == self.start[0] and y == self.start[1])):
+    def aStar(self):
+        g = {self.start: 0}
+        parent = {self.start: self.start}
+
+        for elements in self.grid:
+            for element in elements:
+                if(element == self.start):
                     continue
-                g[(x, y)] = float('inf')
-                parent[(x, y)] = None
+                g[element] = float('inf')
+                parent[element] = None
         
         visitable = SearchAlgorithms.Queue('prio')
-        node = graph.Node((self.start[0], self.start[1]))
+        node = graph.Node(self.start)
         node.value = 0 
         visitable.push(node)
         explored = set()
@@ -93,77 +185,69 @@ class Grid:
             if(current.name == self.end):
                 return True
             explored.add(current.name)
+            current.name.make_closed()
             g[current.name] = self.getNumberOfCellsInPath(current.name, parent)
-            for adjacent in self.getAdjacetsWhichNotMarked(current.name, explored):
+            current.name.update_neighbors(self.grid)
+            for adjacent in current.name.neighbors:
                 estimated_costs = self.getLength(adjacent)
                 if(g[current.name]+estimated_costs < g[adjacent]):
                     g[adjacent] = g[current.name] + estimated_costs
                     parent[adjacent] = current.name
+                    node = None
                     if(visitable.contains(adjacent)):
                         node = self.visitable.pop(adjacent)
-                        node.value = self.getLength(adjacent)
-                        visitable.push(node)
                     else:
-                        node = graph.Node((adjacent[0], adjacent[1]))
-                        node.value = self.getLength(adjacent)
-                        visitable.push(node)
+                        node = graph.Node(adjacent)
+                    node.value = self.getLength(adjacent)
+                    visitable.push(node)
+                    adjacent.make_open()
+            time.sleep(0.1)
+            self.draw()
+
+
+    def draw_grid(self, win):
+        for row in range(self.rows):
+            for col in range(self.rows):
+                pygame.draw.rect(win,self.grid[row][col].color,[(self.margin + self.width) * col + self.margin,(self.margin + self.height) * row + self.margin,self.width,self.height])
+
+
+    def draw(self):
+        for row in self.grid:
+            for field in row:
+                field.draw(self.win)
+
+        self.draw_grid(self.win)
+        pygame.display.update()
+
+    def start():
+        SIZE = 1000
+        WIN = pygame.display.set_mode((SIZE, SIZE))
+        pygame.display.set_caption("A* Path Finding Algorithm")
+        ROWS = 20
+        WIDTH = 47
+        HEIGHT = 47
+        MARGIN = 3
+        grid = Grid(ROWS, MARGIN, HEIGHT, WIDTH,(19,0), (0,19), WIN)
+
+        start = None
+        end = None
+
+        run = True
+        while run:
+            grid.draw()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        for row in grid.grid:
+                            for spot in row:
+                                spot.update_neighbors(grid.grid)
+                        grid.aStar()
+
+        pygame.quit()
 
 
 
-
-
-# Define some colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-
-WIDTH = 47
-HEIGHT = 47
-MARGIN = 3
-
-gameField = Grid(20, 20)
-gameField.aStar();
-# ---
-# Initialize your classes etc.here
-# ---
-
-pygame.init()
-
-size = (1000, 1000)
-screen = pygame.display.set_mode(size)
-
-pygame.display.set_caption("My Game")
-
-done = False
-
-clock = pygame.time.Clock()
-
-
-while not done:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-
-        gameField.aStar();
-
-        for row in range(20):
-            for column in range(20):
-                color = WHITE
-                if gameField.getField(row, column) == 1:
-                    color = GREEN
-                elif (gameField.getField(row, column) == None):
-                    color = BLACK
-
-                pygame.draw.rect(screen,
-                                 color,
-                                 [(MARGIN + WIDTH) * column + MARGIN,
-                                  (MARGIN + HEIGHT) * row + MARGIN,
-                                     WIDTH,
-                                     HEIGHT])
-
-    pygame.display.flip()
-    clock.tick(1)
-
-pygame.quit()
+Grid.start()
