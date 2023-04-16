@@ -1,11 +1,17 @@
 import pygame
 import math
+import graph
+import SearchAlgorithms
 
 
 class Grid:
-    grid = None
 
     def __init__(self, width, height):
+        self.height = height
+        self.width = width
+        start = (19,0)
+        end = (0,19)
+
         self.grid = [[0]*width for i in range(height)]
         self.grid[9][4] = None
         self.grid[9][5] = None
@@ -41,6 +47,70 @@ class Grid:
     def getField(self, x, y):
         return self.grid[x][y]
 
+    def getAdjacetsWhichNotMarked(self,coordinates, explored):
+        adjacent = []
+        possible = [(coordinates[0] + 1, coordinates[1]),
+                    (coordinates[0] - 1, coordinates[1]),
+                    (coordinates[0], coordinates[1] + 1),
+                    (coordinates[0], coordinates[1] - 1)]
+        for element in possible:
+            if(not element in explored and element[0] >= 0 and element[0] < self.width and element[1] >= 0 and element[1] < self.height):
+                adjacent.append(element)
+        return adjacent
+    
+    def getLength(self, node):
+        eins = ((node[0] - self.end[0])**2)
+        zwei = ((self.end[1] - node[1])**2)
+        return  math.sqrt(eins + zwei)
+    
+    def getNumberOfCellsInPath(self, node, parent):
+        current = node
+        increment = 0
+        while(current != self.start):
+            increment+=1
+            current = parent[current]
+        return increment
+
+    def aStar(self):
+        g = {(self.start[0], self.start[1]): 0}
+        parent = {(self.start[0], self.start[1]): (self.start[0], self.start[1])}
+
+        for x in range(self.width):
+            for y in range(self.height):
+                if((x == self.start[0] and y == self.start[1])):
+                    continue
+                g[(x, y)] = float('inf')
+                parent[(x, y)] = None
+        
+        visitable = SearchAlgorithms.Queue('prio')
+        node = graph.Node((self.start[0], self.start[1]))
+        node.value = 0 
+        visitable.push(node)
+        explored = set()
+
+        while(not visitable.empty()):
+            current = visitable.pop()
+            if(current.name == self.end):
+                return True
+            explored.add(current.name)
+            g[current.name] = self.getNumberOfCellsInPath(current.name, parent)
+            for adjacent in self.getAdjacetsWhichNotMarked(current.name, explored):
+                estimated_costs = self.getLength(adjacent)
+                if(g[current.name]+estimated_costs < g[adjacent]):
+                    g[adjacent] = g[current.name] + estimated_costs
+                    parent[adjacent] = current.name
+                    if(visitable.contains(adjacent)):
+                        node = self.visitable.pop(adjacent)
+                        node.value = self.getLength(adjacent)
+                        visitable.push(node)
+                    else:
+                        node = graph.Node((adjacent[0], adjacent[1]))
+                        node.value = self.getLength(adjacent)
+                        visitable.push(node)
+
+
+
+
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -54,6 +124,7 @@ HEIGHT = 47
 MARGIN = 3
 
 gameField = Grid(20, 20)
+gameField.aStar();
 # ---
 # Initialize your classes etc.here
 # ---
@@ -69,15 +140,14 @@ done = False
 
 clock = pygame.time.Clock()
 
+
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
 
-    # ---
-# The code here ist called once per clock tick
-# Let your algorithm loop here
-# ---
+        gameField.aStar();
+
         for row in range(20):
             for column in range(20):
                 color = WHITE
@@ -94,6 +164,6 @@ while not done:
                                      HEIGHT])
 
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(1)
 
 pygame.quit()

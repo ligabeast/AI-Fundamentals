@@ -55,6 +55,12 @@ class Graph:
             if v.name == name:
                 return v
         return None
+    
+    def getAllNodeNames(self):
+        names = []
+        for node in self.nodes:
+            names.append(node.name)
+        return names
 
     def print(self):
         node_list = self.nodes

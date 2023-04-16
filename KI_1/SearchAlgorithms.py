@@ -35,6 +35,12 @@ class Queue:
         else:
             return self.structeredData.pop(0)
 
+    def contains(self, value):
+        for element in self.structeredData:
+            if(value == element):
+                return True
+        return False
+    
     def empty(self):
         return (not self.structeredData)
 
@@ -192,32 +198,6 @@ class Node:
                 self.visitable.push(graph.Edge(
                     [edge.start.copy(), adjacent.end, adjacent.value+edge.value]))
 
-    def aStar(self, start, end):
-        g = {start: 0}
-        parent = {start: start}
-        self.visitable = Queue('prio')
-        self.visitable.push(graph.Node(start))
-        self.explored = set()
-        self.path = []
-
-
-        while(not self.visitable.empty()):
-            current = self.visitable.pop()
-            if(current == start):
-                return True
-            self.explored.add(current.name)
-            for adjacent in self.getAdjacetsWhichNotMarked(current.name):
-                if (not adjacent.end in self.explored and not adjacent.end in self.visitable):
-                    g = {current.name: float('inf')}
-                    parent = {current: None}
-                if(g[current.name]+self.romania.getWeight(current.name, adjacent.name) < g[adjacent.name]):
-                    g[adjacent.name] = g[current.name] + self.romania.getWeight(current.name, adjacent.name)
-                    parent[adjacent.name] = current.name
-                    if(adjacent.name in self.visitable):
-                        node = self.visitable.pop(adjacent)
-                        node.value = g[adjacent.name]
-                        self.visitable.push(node)
-
 
 
 test = Node()
@@ -229,9 +209,6 @@ test.printPath()
 print("-------")
 test.UCS('Bu', 'Ti')
 test.printPath()
-print("-------")
-test.aStar('Bu', 'Ti')
-test.printExplored()
 
 
 # test = Queue('prio')
