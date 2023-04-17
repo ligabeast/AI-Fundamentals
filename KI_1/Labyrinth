@@ -117,33 +117,14 @@ class Grid:
         self.start.make_start()
         self.end.make_end()
 
-        self.grid[9][4].make_barrier()
-        self.grid[9][5].make_barrier()
-        self.grid[9][6].make_barrier()
-        self.grid[9][7].make_barrier()
-        self.grid[9][8].make_barrier()
-        self.grid[9][9].make_barrier()
-        self.grid[9][9].make_barrier()
-        self.grid[10][9].make_barrier()
-        self.grid[11][9].make_barrier()
-        self.grid[12][9].make_barrier()
-        self.grid[13][9].make_barrier()
-        self.grid[14][9].make_barrier()
-        self.grid[15][9].make_barrier()
-        self.grid[16][9].make_barrier()
-        self.grid[17][9].make_barrier()
-        self.grid[18][9].make_barrier()
-        self.grid[19][9].make_barrier()
-        self.grid[0][16].make_barrier()
-        self.grid[1][16].make_barrier()
-        self.grid[2][16].make_barrier()
-        self.grid[3][16].make_barrier()
-        self.grid[4][16].make_barrier()
-        self.grid[5][16].make_barrier()
-        self.grid[6][16].make_barrier()
-        self.grid[7][16].make_barrier()
-        self.grid[8][16].make_barrier()
-        self.grid[9][16].make_barrier()
+        for col in range(4,10):
+            self.grid[9][col].make_barrier()
+
+        for row in range(10,20):
+            self.grid[row][9].make_barrier()
+
+        for row in range(0,10):
+            self.grid[row][16].make_barrier()
 
     def euklidischeDistanz(self, node):  # heuristic function
         return math.sqrt(((self.end.col - node.col)**2) + ((node.row - self.end.row)**2))
@@ -222,6 +203,7 @@ class Grid:
                     adjacent.make_open()
             time.sleep(0.01)
             self.draw()
+        print('Path is unreachable')
         return False
 
     def draw_grid(self, win):
@@ -241,7 +223,7 @@ class Grid:
     def start():
         SIZE = 1000
         WIN = pygame.display.set_mode((SIZE, SIZE))
-        pygame.display.set_caption("A* Path Finding Algorithm")
+        pygame.display.set_caption("A* algorithm visualization")
         ROWS = 20
         WIDTH = 47
         HEIGHT = 47
