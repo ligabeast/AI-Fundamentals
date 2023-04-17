@@ -146,14 +146,14 @@ class Grid:
         self.grid[9][16].make_barrier()
 
     def euklidischeDistanz(self, node):  # heuristic function
-        return math.sqrt(((self.end.row - node.col)**2) + ((node.row - self.end.col)**2))
+        return math.sqrt(((self.end.col - node.col)**2) + ((node.row - self.end.row)**2))
 
     def manhattenDistanz(self, node):  # heuristic function
         return abs(self.end.row - node.col) + abs(node.row - self.end.col)
 
     def getNumberOfCellsInPath(self, node, parent):
         current = node
-        increment = 0
+        increment = 1
         while (current != self.start):
             increment += 1
             current = parent[current]
@@ -172,13 +172,11 @@ class Grid:
 
     def markPath(self, parent, node):
         field = node
-        self.end.make_path()
-        self.draw()
         while (field != self.start):
             field.make_path()
             field = parent[field]
             self.draw()
-        self.end.make_path()
+        self.start.make_path()
         self.draw()
 
     def aStar(self):
@@ -202,6 +200,9 @@ class Grid:
             current = visitable.pop()
             if (current.name == self.end):
                 self.markPath(parent, current.name)
+                print("The Path is ", self.getNumberOfCellsInPath(current.name,
+                      parent), " Fields long")
+                return True
             explored.add(current.name)
             current.name.make_closed()
             g[current.name] = self.getNumberOfCellsInPath(current.name, parent)
@@ -221,6 +222,7 @@ class Grid:
                     adjacent.make_open()
             time.sleep(0.01)
             self.draw()
+        return False
 
     def draw_grid(self, win):
         for row in range(self.rows):
