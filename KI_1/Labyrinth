@@ -10,6 +10,7 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 PURPLE = (128, 0, 128)
+YELLOW = (255, 255, 0)
 
 
 class Field:
@@ -29,7 +30,7 @@ class Field:
         return (self.row, self.col)
 
     def is_closed(self):
-        return self.color == RED
+        return self.color == YELLOW
 
     def is_open(self):
         return self.color == GREEN
@@ -50,7 +51,7 @@ class Field:
         self.color = BLUE
 
     def make_closed(self):
-        self.color = RED
+        self.color = YELLOW
 
     def make_open(self):
         self.color = GREEN
@@ -144,8 +145,11 @@ class Grid:
         self.grid[8][16].make_barrier()
         self.grid[9][16].make_barrier()
 
-    def getLength(self, node):  # heuristic function
-        return math.sqrt(((self.end.row - node.row)**2) + ((node.col - self.end.col)**2))
+    def euklidischeDistanz(self, node):  # heuristic function
+        return math.sqrt(((self.end.row - node.col)**2) + ((node.row - self.end.col)**2))
+
+    def manhattenDistanz(self, node):  # heuristic function
+        return abs(self.end.row - node.col) + abs(node.row - self.end.col)
 
     def getNumberOfCellsInPath(self, node, parent):
         current = node
@@ -165,6 +169,17 @@ class Grid:
             if (not element in explored and element[0] >= 0 and element[0] < self.width and element[1] >= 0 and element[1] < self.height):
                 adjacent.append(element)
         return adjacent
+
+    def markPath(self, parent, node):
+        field = node
+        self.end.make_path()
+        self.draw()
+        while (field != self.start):
+            field.make_path()
+            field = parent[field]
+            self.draw()
+        self.end.make_path()
+        self.draw()
 
     def aStar(self):
         g = {self.start: 0}
@@ -186,13 +201,13 @@ class Grid:
         while (not visitable.empty()):
             current = visitable.pop()
             if (current.name == self.end):
-                return True
+                self.markPath(parent, current.name)
             explored.add(current.name)
             current.name.make_closed()
             g[current.name] = self.getNumberOfCellsInPath(current.name, parent)
             current.name.update_neighbors(self.grid)
             for adjacent in current.name.neighbors:
-                estimated_costs = 5 * self.getLength(adjacent)
+                estimated_costs = self.euklidischeDistanz(adjacent)
                 if (g[current.name]+estimated_costs < g[adjacent]):
                     g[adjacent] = g[current.name] + estimated_costs
                     parent[adjacent] = current.name
@@ -204,7 +219,7 @@ class Grid:
                     node.value = g[adjacent]
                     visitable.push(node)
                     adjacent.make_open()
-            time.sleep(0.05)
+            time.sleep(0.01)
             self.draw()
 
     def draw_grid(self, win):

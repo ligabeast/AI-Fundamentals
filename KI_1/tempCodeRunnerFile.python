@@ -1,0 +1,2 @@
+
+    def euklidischeDistanz(self, node):  # heuristic function
