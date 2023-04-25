@@ -17,8 +17,6 @@ class Field:
     def __init__(self, row, col, margin, height, width, total_rows):
         self.row = row
         self.col = col
-        self.x = row * width
-        self.y = col * width
         self.color = WHITE
         self.neighbors = []
         self.width = width
@@ -43,9 +41,6 @@ class Field:
 
     def is_end(self):
         return self.color == BLUE
-
-    def reset(self):
-        self.color = WHITE
 
     def make_start(self):
         self.color = BLUE
@@ -85,15 +80,6 @@ class Field:
         if self.col > 0 and not grid[self.row][self.col - 1].is_barrier():  # LEFT
             self.neighbors.append(grid[self.row][self.col - 1])
 
-    def __lt__(self, other):
-        return False
-
-    def reconstruct_path(came_from, current, draw):
-        while current in came_from:
-            current = came_from[current]
-            current.make_path()
-            draw()
-
 
 class Grid:
     def __init__(self, rows, margin, heigth, width, start, end, win):
@@ -130,7 +116,7 @@ class Grid:
         return math.sqrt(((self.end.col - node.col)**2) + ((node.row - self.end.row)**2))
 
     def manhattenDistanz(self, node):  # heuristic function
-        return abs(self.end.row - node.col) + abs(node.row - self.end.col)
+        return abs(self.end.col - node.col) + abs(node.row - self.end.row)
 
     def getNumberOfCellsInPath(self, node, parent):
         current = node
@@ -186,10 +172,9 @@ class Grid:
                 return True
             explored.add(current.name)
             current.name.make_closed()
-            g[current.name] = self.getNumberOfCellsInPath(current.name, parent)
             current.name.update_neighbors(self.grid)
             for adjacent in current.name.neighbors:
-                estimated_costs = self.euklidischeDistanz(adjacent)
+                estimated_costs = self.manhattenDistanz(adjacent)
                 if (g[current.name]+estimated_costs < g[adjacent]):
                     g[adjacent] = g[current.name] + estimated_costs
                     parent[adjacent] = current.name
