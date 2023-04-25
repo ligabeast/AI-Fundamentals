@@ -52,7 +52,7 @@ class Board:
 
 
     def geneticAlgorithm(self):
-        
+        pass
 
     def main(self):
         pygame.init()
