@@ -103,13 +103,13 @@ class Grid:
         self.start.make_start()
         self.end.make_end()
 
-        for col in range(4,10):
+        for col in range(4, 10):
             self.grid[9][col].make_barrier()
 
-        for row in range(10,20):
+        for row in range(10, 20):
             self.grid[row][9].make_barrier()
 
-        for row in range(0,10):
+        for row in range(0, 10):
             self.grid[row][16].make_barrier()
 
     def euklidischeDistanz(self, node):  # heuristic function
