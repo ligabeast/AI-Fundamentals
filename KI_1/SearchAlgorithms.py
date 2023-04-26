@@ -37,10 +37,10 @@ class Queue:
 
     def contains(self, value):
         for element in self.structeredData:
-            if(value == element):
+            if (value == element):
                 return True
         return False
-    
+
     def empty(self):
         return (not self.structeredData)
 
@@ -131,8 +131,6 @@ class Node:
         self.visitable.push(graph.Edge([[], start, 0]))
 
         while (True):
-            if (self.visitable.empty()):
-                return False
             node = None
             while (not self.visitable.empty()):
                 node = self.visitable.pop()
@@ -197,7 +195,6 @@ class Node:
             for adjacent in self.getAdjacetsWhichNotMarked(edge.end):
                 self.visitable.push(graph.Edge(
                     [edge.start.copy(), adjacent.end, adjacent.value+edge.value]))
-
 
 
 test = Node()
