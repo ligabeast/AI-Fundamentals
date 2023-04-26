@@ -73,7 +73,27 @@ class Board:
             col += 1
 
     def geneticAlgorithm(self):
-        pass
+        self.generatedBoard = []
+
+        while (len(self.generatedBoard) < 100):
+            for j in range(2):
+                currentBoard = ""
+                for i in range(8):
+                    randomNumber = random.randint(0, 7)
+                    currentBoard += str(randomNumber)
+                self.generatedBoard.append(currentBoard)
+                self.setBoard(currentBoard)
+                self.drawBoard()
+                time.sleep(5)
+            # place border on the left side
+            randomNumber = random.randint(1, 7)
+            child = self.generatedBoard[-2][0:randomNumber] + \
+                self.generatedBoard[-1][randomNumber:
+                                        len(self.generatedBoard[-1])]
+            self.generatedBoard.append(child)
+            self.setBoard(child)
+            self.drawBoard()
+            time.sleep(5)
 
     def main(self):
         pygame.init()
