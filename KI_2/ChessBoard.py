@@ -3,8 +3,7 @@ import random
 import time
 
 # set color with rgb
-white, black, red, gray = (255, 255, 255), (0, 0,
-                                            0), (255, 0, 0), (100, 100, 100)
+white, black, red, gray = (255, 255, 255), (0, 0, 0), (255, 0, 0), (100, 100, 100)
 boardLength = 8
 screenSize = (800, 800)
 # Size of squares
@@ -42,8 +41,6 @@ class Field:
 
 class Board:
     def __init__(self, queenPositions, queenQuantitys):
-        self.x = queenPositions
-        self.y = queenQuantitys
         self.board = [[0]*boardLength for i in range(boardLength)]
         self.initialzeFields()
 
@@ -59,32 +56,77 @@ class Board:
             # since theres an even number of squares go back one value
             cnt -= 1
 
+
+    def getThreadiningRow(self):
+        counter = 0
+        QueensInRaw = {i : 0 for i in range(boardLength)}
+        for row in self.positions:
+            QueensInRaw[int(row)] += 1
+
+        for value in QueensInRaw.values():
+            if(value >= 2):
+                counter += (value-1)
+        return counter
+
+    def getThreadiningDiagonal(self):
+        counter = 0
+        rightDiagonal = {i:0 for i in range(-(boardLength-1),boardLength)}
+        leftDiagonal = {i:0 for i in range((2*boardLength)-1)}
+        #right y1-x1 = y2-x2
+        for col in range(boardLength):
+            row = int(self.positions[col])
+            rightDiagonal[col-row] += 1
+        for value in rightDiagonal.values():
+            if(value >= 2):
+                counter += (value-1)
+        #left
+        for col in range(boardLength):
+            row = int(self.positions[col])
+            leftDiagonal[col+row] += 1
+        for value in leftDiagonal.values():
+            if(value >= 2):
+                counter += (value-1)
+
+        return counter
+
+                
+
+    #Quantity of Threading Queens
+    def heuristicFunction(self): 
+        return self.getThreadiningDiagonal() + self.getThreadiningRow()
+
     def resetBoard(self):
-        for row in range(8):
-            for col in range(8):
+        for row in range(boardLength):
+            for col in range(boardLength):
                 if (self.board[row][col].isQueen()):
                     self.board[row][col].disableQueen()
 
-    def setBoard(self, string):
+    def setBoard(self, board):
         self.resetBoard()
+        self.positions = board
         col = 0
-        for s in string:
+        for s in board:
             self.board[col][int(s)].setQueen()
             col += 1
 
     def geneticAlgorithm(self):
         self.generatedBoard = []
+        best = 28
+        bestPostion = ""
 
         while (len(self.generatedBoard) < 100):
             for j in range(2):
                 currentBoard = ""
-                for i in range(8):
+                for i in range(boardLength):
                     randomNumber = random.randint(0, 7)
                     currentBoard += str(randomNumber)
                 self.generatedBoard.append(currentBoard)
                 self.setBoard(currentBoard)
                 self.drawBoard()
-                time.sleep(5)
+                currentThreading = self.heuristicFunction()
+                if(currentThreading < best):
+                    best = currentThreading
+                    bestPostion = currentBoard
             # place border on the left side
             randomNumber = random.randint(1, 7)
             child = self.generatedBoard[-2][0:randomNumber] + \
@@ -93,7 +135,12 @@ class Board:
             self.generatedBoard.append(child)
             self.setBoard(child)
             self.drawBoard()
-            time.sleep(5)
+            if(currentThreading < best):
+                best = currentThreading
+                bestPostion = currentBoard
+        print(best)
+        self.setBoard(bestPostion)
+        self.drawBoard()
 
     def main(self):
         pygame.init()
