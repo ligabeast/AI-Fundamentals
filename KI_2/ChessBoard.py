@@ -1,14 +1,69 @@
+import math
 import pygame
 import random
-import time
 
 # set color with rgb
 white, black, red, gray = (255, 255, 255), (0, 0, 0), (255, 0, 0), (100, 100, 100)
+
+# Best Settings
+# boardLength = 8
+# initialPopulation = 500
+# mutation = 0.3
+# selectionFactor = 10 #higher -> select better parent
+# maxIteration = 100
+# prioritySize = 250
+
 boardLength = 8
-screenSize = (800, 800)
+initialPopulation = 500
+mutation = 0.3
+selectionFactor = 10 #higher -> select better parent
+maxIteration = 100
+prioritySize = 250
+
+screenSize = (boardLength * 100, boardLength * 100)
 # Size of squares
 size = 80
 
+class PriorityQueue:
+    def __init__(self, max):
+        self.structeredData = list()
+        self.max = max
+
+    def push(self, data):
+        index = 0
+        if(self.contains(data)):
+            return
+        while (index < len(self.structeredData) and 
+               self.structeredData[index][0] < data[0]):
+            index += 1
+        if (index >= len(self.structeredData)):
+            self.structeredData.append(data)
+        else:
+            self.structeredData.insert(index, data)
+        if(len(self.structeredData) > self.max):
+            self.structeredData.pop()
+
+    def pop(self,index = 0):
+        if (not self.structeredData):  # empty Queue
+            print('Queue is empty!!')
+            return None
+        else:
+            return self.structeredData.pop(index)
+    def get(self,index):
+        if (not self.structeredData):  # empty Queue
+            print('Queue is empty!!')
+            return None
+        else:
+            return self.structeredData[index]
+        
+    def size(self):
+        return len(self.structeredData)
+
+    def empty(self):
+        return (not self.structeredData)
+
+    def contains(self, val):
+        return val in self.structeredData
 
 class Field:
     def __init__(self, row, col):
@@ -38,11 +93,15 @@ class Field:
     def isQueen(self):
         return self.queen
 
-
 class Board:
     def __init__(self, queenPositions, queenQuantitys):
         self.board = [[0]*boardLength for i in range(boardLength)]
         self.initialzeFields()
+
+    def selectionParent(self):
+        randomValue = random.randint(0,prioritySize)
+        index = (randomValue ** selectionFactor) * ((prioritySize - 1)/(prioritySize ** selectionFactor))
+        return int(index)
 
     def initialzeFields(self):
         # board length, must be even
@@ -56,11 +115,10 @@ class Board:
             # since theres an even number of squares go back one value
             cnt -= 1
 
-
     def getThreadiningRow(self):
         counter = 0
         QueensInRaw = {i : 0 for i in range(boardLength)}
-        for row in self.positions:
+        for row in self.queens:
             QueensInRaw[int(row)] += 1
 
         for value in QueensInRaw.values():
@@ -74,25 +132,22 @@ class Board:
         leftDiagonal = {i:0 for i in range((2*boardLength)-1)}
         #right y1-x1 = y2-x2
         for col in range(boardLength):
-            row = int(self.positions[col])
+            row = self.queens[col]
             rightDiagonal[col-row] += 1
         for value in rightDiagonal.values():
             if(value >= 2):
                 counter += (value-1)
         #left
         for col in range(boardLength):
-            row = int(self.positions[col])
+            row = self.queens[col]
             leftDiagonal[col+row] += 1
         for value in leftDiagonal.values():
             if(value >= 2):
                 counter += (value-1)
-
         return counter
 
-                
-
     #Quantity of Threading Queens
-    def heuristicFunction(self): 
+    def fitnessFunction(self): 
         return self.getThreadiningDiagonal() + self.getThreadiningRow()
 
     def resetBoard(self):
@@ -103,59 +158,67 @@ class Board:
 
     def setBoard(self, board):
         self.resetBoard()
-        self.positions = board
+        self.queens = board
         col = 0
         for s in board:
-            self.board[col][int(s)].setQueen()
+            self.board[col][s].setQueen()
             col += 1
 
-    def geneticAlgorithm(self):
-        self.generatedBoard = []
-        best = 28
-        bestPostion = ""
+    def generateInitialPopulation(self):
+        self.population = PriorityQueue(prioritySize)
+        for j in range(initialPopulation):
+            currentBoard = []
+            for i in range(boardLength):
+                randomNumber = random.randint(0, boardLength-1)
+                currentBoard.append(randomNumber)
+            self.setBoard(currentBoard)
+            self.population.push((self.fitnessFunction(),currentBoard))
+        self.resetBoard()
 
-        while (len(self.generatedBoard) < 100):
-            for j in range(2):
-                currentBoard = ""
-                for i in range(boardLength):
-                    randomNumber = random.randint(0, 7)
-                    currentBoard += str(randomNumber)
-                self.generatedBoard.append(currentBoard)
-                self.setBoard(currentBoard)
-                self.drawBoard()
-                currentThreading = self.heuristicFunction()
-                if(currentThreading < best):
-                    best = currentThreading
-                    bestPostion = currentBoard
-            # place border on the left side
-            randomNumber = random.randint(1, 7)
-            child = self.generatedBoard[-2][0:randomNumber] + \
-                self.generatedBoard[-1][randomNumber:
-                                        len(self.generatedBoard[-1])]
-            self.generatedBoard.append(child)
-            self.setBoard(child)
-            self.drawBoard()
-            if(currentThreading < best):
-                best = currentThreading
-                bestPostion = currentBoard
-        print(best)
-        self.setBoard(bestPostion)
+    def geneticAlgorithm(self):
+        self.generateInitialPopulation()
+        best = {'value' : 99999, 'board' : [0 for i in range(boardLength)]}
+
+        for counter in range(maxIteration):
+            for i in range(self.population.size()):
+                first = self.population.get(self.selectionParent())[1]
+                second = self.population.get(self.selectionParent())[1]
+
+                # place border on the left side
+                randomBorder = random.randint(1, boardLength-1)
+                child = first[0:randomBorder] + second[randomBorder: boardLength]
+
+                mutationsProbability = random.uniform(0,1)
+                if(mutationsProbability <= mutation):
+                    child[random.randint(0,boardLength-1)] = random.randint(0,boardLength-1)
+
+                self.setBoard(child)
+                childFitness = self.fitnessFunction()
+                if(best['value'] > childFitness):
+                    if(childFitness == 0):
+                        print("Solution Found after ",counter," Iterations")
+                        self.drawBoard()
+                        return
+                    best['value'] = childFitness
+                    best['board'] = child
+                
+                self.population.push((self.fitnessFunction(), child))
+
+        print("Solution not Found, best Result of Fitness Function:",best['value'])
+        self.setBoard(best['board'])
         self.drawBoard()
 
     def main(self):
         pygame.init()
 
         # set display
-        self.gameDisplay = pygame.display.set_mode((800, 800))
+        self.gameDisplay = pygame.display.set_mode(screenSize)
 
         # caption
         pygame.display.set_caption("ChessBoard")
 
         # beginning of logic
         gameExit = False
-
-        # Size of squares
-        size = 80
 
         # Image of the Queen
         self.queenImg = pygame.image.load('KI_2/QueenImage.png')
