@@ -1,24 +1,19 @@
 import math
+from time import sleep
 import pygame
 import random
+import copy
 
 # set color with rgb
 white, black, red, gray = (255, 255, 255), (0, 0, 0), (255, 0, 0), (100, 100, 100)
 
-# Best Settings
-# boardLength = 8
-# initialPopulation = 500
-# mutation = 0.3
-# selectionFactor = 10 #higher -> select better parent
-# maxIteration = 100
-# prioritySize = 250
-
 boardLength = 8
-initialPopulation = 500
+initialPopulation = 350
 mutation = 0.3
 selectionFactor = 10 #higher -> select better parent
 maxIteration = 100
 prioritySize = 250
+stopScore = 0
 
 screenSize = (boardLength * 100, boardLength * 100)
 # Size of squares
@@ -94,9 +89,12 @@ class Field:
         return self.queen
 
 class Board:
-    def __init__(self, queenPositions, queenQuantitys):
+    def __init__(self,geneticAlgorithm):
         self.board = [[0]*boardLength for i in range(boardLength)]
         self.initialzeFields()
+        #True = geneticAlgorithm, False = Backtracking
+        self.transitionModel = geneticAlgorithm
+
 
     def selectionParent(self):
         randomValue = random.randint(0,prioritySize)
@@ -175,6 +173,51 @@ class Board:
             self.population.push((self.fitnessFunction(),currentBoard))
         self.resetBoard()
 
+    def backtracking(self):
+        self.solutionCounter = 0
+        self.queens = ['X'] * boardLength
+        self.markedPositions = [[False] * boardLength for i in range(boardLength)]
+        self.backtrackingRecursive(0)
+
+    def markPosition(self,row,col):
+        for tmpRow in range(boardLength):
+            self.markedPositions[tmpRow][col] = True
+        for tmpCol in range(boardLength):
+            self.markedPositions[row][tmpCol] = True
+
+        resultLeft = row + col
+        resultRight = col - row
+        for tmpRow in range(boardLength):
+            for tmpCol in range(boardLength):
+                if(tmpRow + tmpCol == resultLeft):
+                    self.markedPositions[tmpRow][tmpCol] = True
+                if(tmpCol - tmpRow == resultRight):
+                    self.markedPositions[tmpRow][tmpCol] = True
+
+    def backtrackingRecursive(self,col):
+        for row in range(boardLength):
+            if(not self.markedPositions[row][col]):
+                self.board[row][col].setQueen()
+                tmpMarkPosition = copy.deepcopy(self.markedPositions)
+                self.markPosition(row,col)
+                self.queens[col] = row
+                self.drawBoard()
+
+                if(self.getNumberOfQueensOnBoard() == boardLength and self.fitnessFunction() == 0):
+                    print("Solution: ",self.queens)
+                    self.solutionCounter+=1
+                
+                if(col + 1 < boardLength):
+                    self.backtrackingRecursive(col+1)
+
+                self.board[row][col].disableQueen()
+                self.queens[col] = 'X'
+                self.markedPositions = tmpMarkPosition
+                
+
+    def getNumberOfQueensOnBoard(self):
+        return boardLength - self.queens.count('X')
+
     def geneticAlgorithm(self):
         self.generateInitialPopulation()
         best = {'value' : 99999, 'board' : [0 for i in range(boardLength)]}
@@ -195,8 +238,9 @@ class Board:
                 self.setBoard(child)
                 childFitness = self.fitnessFunction()
                 if(best['value'] > childFitness):
-                    if(childFitness == 0):
-                        print("Solution Found after ",counter," Iterations")
+                    if(childFitness == stopScore):
+                        if(self.transitionModel):
+                            print("Solution Found after ",counter," Iterations")
                         self.drawBoard()
                         return
                     best['value'] = childFitness
@@ -204,7 +248,8 @@ class Board:
                 
                 self.population.push((self.fitnessFunction(), child))
 
-        print("Solution not Found, best Result of Fitness Function:",best['value'])
+        if(self.transitionModel):
+            print("Solution not Found, best Result of Fitness Function:",best['value'])
         self.setBoard(best['board'])
         self.drawBoard()
 
@@ -234,7 +279,12 @@ class Board:
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
-                        self.geneticAlgorithm()
+                        if(self.transitionModel):
+                            self.geneticAlgorithm()
+                        else:    
+                            self.backtracking()
+                            print("Found solutions: ", self.solutionCounter)
+
 
         # quit from pygame & python
         pygame.quit()
@@ -265,5 +315,5 @@ class Board:
         gameDisplay.blit(queenImg, (500, 500))
 
 
-b = Board(0, 0)
+b = Board(False)
 b.main()
