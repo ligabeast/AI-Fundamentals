@@ -9,11 +9,10 @@ white, black, red, gray = (255, 255, 255), (0, 0,
                                             0), (255, 0, 0), (100, 100, 100)
 
 boardLength = 8
-initialPopulation = 250
+initialPopulation = 100
 mutation = 0.5
 selectionFactor = 10  # higher -> select better parent
 maxIteration = 100
-prioritySize = 150
 stopScore = 0
 
 screenSize = (boardLength * 100, boardLength * 100)
@@ -22,9 +21,8 @@ size = 80
 
 
 class PriorityQueue:
-    def __init__(self, max):
+    def __init__(self):
         self.structeredData = list()
-        self.max = max
 
     def push(self, data):
         index = 0
@@ -99,9 +97,9 @@ class Board:
         self.transitionModel = geneticAlgorithm
 
     def selectionParent(self):
-        randomValue = random.randint(0, prioritySize)
+        randomValue = random.randint(0, self.population.size())
         index = (randomValue ** selectionFactor) * \
-            ((prioritySize - 1)/(prioritySize ** selectionFactor))
+            ((self.population.size() - 1)/(self.population.size() ** selectionFactor))
         return int(index)
 
     def initialzeFields(self):
@@ -166,7 +164,7 @@ class Board:
             col += 1
 
     def generateInitialPopulation(self):
-        self.population = PriorityQueue(prioritySize)
+        self.population = PriorityQueue()
         for j in range(initialPopulation):
             currentBoard = []
             for i in range(boardLength):
@@ -321,5 +319,5 @@ class Board:
         gameDisplay.blit(queenImg, (500, 500))
 
 
-b = Board(False)
+b = Board(True)
 b.main()
