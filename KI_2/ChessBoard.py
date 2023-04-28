@@ -5,19 +5,21 @@ import random
 import copy
 
 # set color with rgb
-white, black, red, gray = (255, 255, 255), (0, 0, 0), (255, 0, 0), (100, 100, 100)
+white, black, red, gray = (255, 255, 255), (0, 0,
+                                            0), (255, 0, 0), (100, 100, 100)
 
 boardLength = 8
-initialPopulation = 350
-mutation = 0.3
-selectionFactor = 10 #higher -> select better parent
+initialPopulation = 250
+mutation = 0.5
+selectionFactor = 10  # higher -> select better parent
 maxIteration = 100
-prioritySize = 250
+prioritySize = 150
 stopScore = 0
 
 screenSize = (boardLength * 100, boardLength * 100)
 # Size of squares
 size = 80
+
 
 class PriorityQueue:
     def __init__(self, max):
@@ -26,31 +28,30 @@ class PriorityQueue:
 
     def push(self, data):
         index = 0
-        if(self.contains(data)):
+        if (self.contains(data)):
             return
-        while (index < len(self.structeredData) and 
+        while (index < len(self.structeredData) and
                self.structeredData[index][0] < data[0]):
             index += 1
         if (index >= len(self.structeredData)):
             self.structeredData.append(data)
         else:
             self.structeredData.insert(index, data)
-        if(len(self.structeredData) > self.max):
-            self.structeredData.pop()
 
-    def pop(self,index = 0):
+    def pop(self, index=0):
         if (not self.structeredData):  # empty Queue
             print('Queue is empty!!')
             return None
         else:
             return self.structeredData.pop(index)
-    def get(self,index):
+
+    def get(self, index):
         if (not self.structeredData):  # empty Queue
             print('Queue is empty!!')
             return None
         else:
-            return self.structeredData[index]
-        
+            return self.structeredData[index][1]
+
     def size(self):
         return len(self.structeredData)
 
@@ -59,6 +60,7 @@ class PriorityQueue:
 
     def contains(self, val):
         return val in self.structeredData
+
 
 class Field:
     def __init__(self, row, col):
@@ -88,17 +90,18 @@ class Field:
     def isQueen(self):
         return self.queen
 
+
 class Board:
-    def __init__(self,geneticAlgorithm):
+    def __init__(self, geneticAlgorithm):
         self.board = [[0]*boardLength for i in range(boardLength)]
         self.initialzeFields()
-        #True = geneticAlgorithm, False = Backtracking
+        # True = geneticAlgorithm, False = Backtracking
         self.transitionModel = geneticAlgorithm
 
-
     def selectionParent(self):
-        randomValue = random.randint(0,prioritySize)
-        index = (randomValue ** selectionFactor) * ((prioritySize - 1)/(prioritySize ** selectionFactor))
+        randomValue = random.randint(0, prioritySize)
+        index = (randomValue ** selectionFactor) * \
+            ((prioritySize - 1)/(prioritySize ** selectionFactor))
         return int(index)
 
     def initialzeFields(self):
@@ -115,37 +118,37 @@ class Board:
 
     def getThreadiningRow(self):
         counter = 0
-        QueensInRaw = {i : 0 for i in range(boardLength)}
+        QueensInRaw = {i: 0 for i in range(boardLength)}
         for row in self.queens:
             QueensInRaw[int(row)] += 1
 
         for value in QueensInRaw.values():
-            if(value >= 2):
+            if (value >= 2):
                 counter += (value-1)
         return counter
 
     def getThreadiningDiagonal(self):
         counter = 0
-        rightDiagonal = {i:0 for i in range(-(boardLength-1),boardLength)}
-        leftDiagonal = {i:0 for i in range((2*boardLength)-1)}
-        #right y1-x1 = y2-x2
+        rightDiagonal = {i: 0 for i in range(-(boardLength-1), boardLength)}
+        leftDiagonal = {i: 0 for i in range((2*boardLength)-1)}
+        # right y1-x1 = y2-x2
         for col in range(boardLength):
             row = self.queens[col]
             rightDiagonal[col-row] += 1
         for value in rightDiagonal.values():
-            if(value >= 2):
+            if (value >= 2):
                 counter += (value-1)
-        #left
+        # left
         for col in range(boardLength):
             row = self.queens[col]
             leftDiagonal[col+row] += 1
         for value in leftDiagonal.values():
-            if(value >= 2):
+            if (value >= 2):
                 counter += (value-1)
         return counter
 
-    #Quantity of Threading Queens
-    def fitnessFunction(self): 
+    # Quantity of Threading Queens
+    def fitnessFunction(self):
         return self.getThreadiningDiagonal() + self.getThreadiningRow()
 
     def resetBoard(self):
@@ -170,16 +173,17 @@ class Board:
                 randomNumber = random.randint(0, boardLength-1)
                 currentBoard.append(randomNumber)
             self.setBoard(currentBoard)
-            self.population.push((self.fitnessFunction(),currentBoard))
+            self.population.push((self.fitnessFunction(), currentBoard))
         self.resetBoard()
 
     def backtracking(self):
         self.solutionCounter = 0
         self.queens = ['X'] * boardLength
-        self.markedPositions = [[False] * boardLength for i in range(boardLength)]
+        self.markedPositions = [
+            [False] * boardLength for i in range(boardLength)]
         self.backtrackingRecursive(0)
 
-    def markPosition(self,row,col):
+    def markPosition(self, row, col):
         for tmpRow in range(boardLength):
             self.markedPositions[tmpRow][col] = True
         for tmpCol in range(boardLength):
@@ -189,67 +193,70 @@ class Board:
         resultRight = col - row
         for tmpRow in range(boardLength):
             for tmpCol in range(boardLength):
-                if(tmpRow + tmpCol == resultLeft):
+                if (tmpRow + tmpCol == resultLeft):
                     self.markedPositions[tmpRow][tmpCol] = True
-                if(tmpCol - tmpRow == resultRight):
+                if (tmpCol - tmpRow == resultRight):
                     self.markedPositions[tmpRow][tmpCol] = True
 
-    def backtrackingRecursive(self,col):
+    def backtrackingRecursive(self, col):
         for row in range(boardLength):
-            if(not self.markedPositions[row][col]):
+            if (not self.markedPositions[row][col]):
                 self.board[row][col].setQueen()
                 tmpMarkPosition = copy.deepcopy(self.markedPositions)
-                self.markPosition(row,col)
+                self.markPosition(row, col)
                 self.queens[col] = row
                 self.drawBoard()
 
-                if(self.getNumberOfQueensOnBoard() == boardLength and self.fitnessFunction() == 0):
-                    print("Solution: ",self.queens)
-                    self.solutionCounter+=1
-                
-                if(col + 1 < boardLength):
+                if (self.getNumberOfQueensOnBoard() == boardLength and self.fitnessFunction() == 0):
+                    print("Solution: ", self.queens)
+                    self.solutionCounter += 1
+
+                if (col + 1 < boardLength):
                     self.backtrackingRecursive(col+1)
 
                 self.board[row][col].disableQueen()
                 self.queens[col] = 'X'
                 self.markedPositions = tmpMarkPosition
-                
 
     def getNumberOfQueensOnBoard(self):
         return boardLength - self.queens.count('X')
 
     def geneticAlgorithm(self):
         self.generateInitialPopulation()
-        best = {'value' : 99999, 'board' : [0 for i in range(boardLength)]}
+        best = {'value': 99999, 'board': [0 for i in range(boardLength)]}
 
         for counter in range(maxIteration):
             for i in range(self.population.size()):
-                first = self.population.get(self.selectionParent())[1]
-                second = self.population.get(self.selectionParent())[1]
+                first = self.population.get(self.selectionParent())
+                second = self.population.get(self.selectionParent())
 
                 # place border on the left side
                 randomBorder = random.randint(1, boardLength-1)
-                child = first[0:randomBorder] + second[randomBorder: boardLength]
+                child = copy.deepcopy(
+                    first[0:randomBorder] + second[randomBorder: boardLength])
 
-                mutationsProbability = random.uniform(0,1)
-                if(mutationsProbability <= mutation):
-                    child[random.randint(0,boardLength-1)] = random.randint(0,boardLength-1)
+                mutationsProbability = random.uniform(0, 1)
+                if (mutationsProbability <= mutation):
+                    child[random.randint(0, boardLength-1)
+                          ] = random.randint(0, boardLength-1)
 
                 self.setBoard(child)
                 childFitness = self.fitnessFunction()
-                if(best['value'] > childFitness):
-                    if(childFitness == stopScore):
-                        if(self.transitionModel):
-                            print("Solution Found after ",counter," Iterations")
+                if (best['value'] > childFitness):
+                    if (childFitness == stopScore):
+                        if (self.transitionModel):
+                            print("Solution Found after ",
+                                  counter, " Iterations")
                         self.drawBoard()
                         return
                     best['value'] = childFitness
                     best['board'] = child
-                
+
                 self.population.push((self.fitnessFunction(), child))
 
-        if(self.transitionModel):
-            print("Solution not Found, best Result of Fitness Function:",best['value'])
+        if (self.transitionModel):
+            print("Solution not Found, best Result of Fitness Function:",
+                  best['value'])
         self.setBoard(best['board'])
         self.drawBoard()
 
@@ -279,12 +286,11 @@ class Board:
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
-                        if(self.transitionModel):
+                        if (self.transitionModel):
                             self.geneticAlgorithm()
-                        else:    
+                        else:
                             self.backtracking()
                             print("Found solutions: ", self.solutionCounter)
-
 
         # quit from pygame & python
         pygame.quit()
