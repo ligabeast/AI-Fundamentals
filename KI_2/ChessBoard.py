@@ -9,25 +9,30 @@ white, black, red, gray = (255, 255, 255), (0, 0,
                                             0), (255, 0, 0), (100, 100, 100)
 
 boardLength = 8
+#prio > initial 
 initialPopulation = 100
-mutation = 0.5
-selectionFactor = 10  # higher -> select better parent
+priorityQueueSize = 50
+mutation = 0.3
+# higher -> select better parent
+selectionFactor = 10
 maxIteration = 100
 stopScore = 0
 
-screenSize = (boardLength * 100, boardLength * 100)
+screenSize = (800, 800)
 # Size of squares
-size = 80
+size = 640 / boardLength
 
 
 class PriorityQueue:
     def __init__(self):
         self.structeredData = list()
+        self.contains = set()
 
     def push(self, data):
         index = 0
-        if (self.contains(data)):
+        if (tuple(data[1]) in self.contains):
             return
+        self.contains.add(tuple(data[1]))
         while (index < len(self.structeredData) and
                self.structeredData[index][0] < data[0]):
             index += 1
@@ -35,6 +40,9 @@ class PriorityQueue:
             self.structeredData.append(data)
         else:
             self.structeredData.insert(index, data)
+        if(len(self.structeredData) > priorityQueueSize):
+            tmp = self.structeredData.pop(len(self.structeredData)-1)
+            self.contains.remove(tuple(tmp[1]))
 
     def pop(self, index=0):
         if (not self.structeredData):  # empty Queue
