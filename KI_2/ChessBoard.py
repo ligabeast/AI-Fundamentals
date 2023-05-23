@@ -10,7 +10,7 @@ white, black, red, gray = (255, 255, 255), (0, 0,
 
 boardLength = 8
 #prio > initial 
-initialPopulation = 100
+initialPopulation = 20
 priorityQueueSize = 50
 mutation = 0.3
 # higher -> select better parent
