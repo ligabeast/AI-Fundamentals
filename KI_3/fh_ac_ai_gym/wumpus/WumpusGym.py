@@ -10,13 +10,12 @@ import copy
 class KnowledgeBase:
     def __init__(self, size):
         self.size = size
-        self.wumpus_death = False
-        self.gold_collected = False
         self.sentences = {('-P00',)} #CNF ... and arr[i] and arr[i+1] and ..
 
     def registerBreezeAt(self,x,y):
         # Bxy
         self.sentences.add(('B'+str(x)+str(y),))
+        self.sentences.add(('-P'+str(x)+str(y),))
         # Bxy <=> (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
 
         # Bxy => (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) &&
@@ -44,6 +43,7 @@ class KnowledgeBase:
     def registerNoBreezeAt(self,x,y):
         #-Bxy
         self.sentences.add(('-B'+str(x)+str(y),))
+        self.sentences.add(('-P'+str(x)+str(y),))
 
         # Bxy <=> (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
 
@@ -55,41 +55,82 @@ class KnowledgeBase:
         #  (!Px+1,y && !Px-1,y && !Px,y+1 && !Px,y-1) 
 
         if(x < self.size - 1):
-            self.sentences.add(('P'+str(x+1)+str(y),))
+            self.sentences.add(('-P'+str(x+1)+str(y),))
         if(y < self.size - 1):
-            self.sentences.add(('P'+str(x)+str(y+1),))
+            self.sentences.add(('-P'+str(x)+str(y+1),))
         if(x > 0):
-            self.sentences.add(('P'+str(x-1)+str(y),))
+            self.sentences.add(('-P'+str(x-1)+str(y),))
         if(y > 0):
-            self.sentences.add(('P'+str(x)+str(y-1),))
+            self.sentences.add(('-P'+str(x)+str(y-1),))
 
             
+    def registerStenchAt(self,x,y):
+        # Sxy
+        self.sentences.add(('S'+str(x)+str(y),))
+        # Sxy <=> (Wx+1,y || Wx-1,y || Wx,y+1 || Wx,y-1) 
+
+        tmp = []
+
+        if(x < self.size - 1):
+            tmp.append('W'+str(x+1)+str(y))
+        if(y < self.size - 1):
+            tmp.append('W'+str(x)+str(y+1))
+        if(x > 0):
+            tmp.append('W'+str(x-1)+str(y))
+        if(y > 0):
+            tmp.append('W'+str(x)+str(y-1))
+
+        self.sentences.add(tuple(tmp))
+
+    def registerNoStenchAt(self,x,y):
+        # -Sxy
+        self.sentences.add(('-S'+str(x)+str(y),))
+        self.sentences.add(('-W'+str(x)+str(y),))
+
+        # -Sxy <=> -(Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
+
+
+        if(x < self.size - 1):
+            self.sentences.add(('-W'+str(x+1)+str(y),))
+        if(y < self.size - 1):
+            self.sentences.add(('-W'+str(x)+str(y+1),))
+        if(x > 0):
+            self.sentences.add(('-W'+str(x-1)+str(y),))
+        if(y > 0):
+            self.sentences.add(('-W'+str(x)+str(y-1),))
+
+
     def tell(self, perception):
         x = perception['x']
         y = perception['y']
 
-        if(perception['scream']):
-            self.wumpus_death = True
-        if(perception['gold']):
-            self.gold_collected = True
         if(perception['breeze']):
             self.registerBreezeAt(x,y)
         else:
             self.registerNoBreezeAt(x,y)
         if(perception['stench']):
-            pass
+            self.registerStenchAt(x,y)
+        else:
+            self.registerNoStenchAt(x,y)
 
     def resolve(self, c1, c2):
         result = set()
-        combined = c1 | c2
+        combined = {c1} | {c2}
         for item1 in c1:
             for item2 in c2:
-                if(item1 == '-'+item2 or item2 == '-'+item1):
-                    tmp = [x for x in combined if (x != item1 and x != item2)]
-                    result.add(tuple(tmp))
-        if(result == {}):
-            return combined
-        return result
+                if(item1 and item2 and item1 == '-'+item2 or item2 == '-'+item1):
+                    for x in combined:
+                        tmp = []
+                        for y in x:
+                            if(y != item1 and y != item2):
+                                tmp.append(y)
+                        if(len(tmp) == 0):
+                            result.add(tuple())
+                        else:
+                            result.add(tuple(tmp))
+        if(result):
+            return result
+        return combined
 
 
     def resolution(self,query):
@@ -103,11 +144,18 @@ class KnowledgeBase:
                 for j in range(len(clauses)):
                     if(j == i):
                         continue
-                    C1 = list(clauses)[len(clauses) - 1 - i]
-                    C2 = list(clauses)[len(clauses) - 1 - j]
-                    resolvent = self.resolve(set(C1), set(C2))
+                    C1 = list(clauses)[i]
+                    C2 = list(clauses)[j]
 
-                    if(() in resolvent):
+                    if(isinstance(C1, str)):
+                         C1 = (C1,)
+                    if(isinstance(C2, str)):
+                        C2 = (C2,)
+
+
+                    resolvent = self.resolve(C1,C2)
+
+                    if(() in resolvent and len(resolvent) == 1):    ##hereeeeee
                         return True
                     
                     new |= resolvent
@@ -118,11 +166,15 @@ class KnowledgeBase:
 
     def ask(self, x,y):
         value = []
-       
+
         if(self.resolution('P'+str(x)+str(y))):
             value.append('Pit')
         elif(not self.resolution('-P'+str(x)+str(y))):
-            value.append('Pit?')
+            value.append('?Pit')
+        if(self.resolution('W'+str(x)+str(y))):
+            value.append('Wumpus')
+        elif(not self.resolution('-W'+str(x)+str(y))):
+            value.append('?Wumpus')
 
         return ','.join(value)
 
