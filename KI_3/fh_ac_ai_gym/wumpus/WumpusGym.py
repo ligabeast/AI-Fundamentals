@@ -10,108 +10,52 @@ import copy
 class KnowledgeBase:
     def __init__(self, size):
         self.size = size
-        self.sentences = {('-P00',)} #CNF ... and arr[i] and arr[i+1] and ..
+        self.sentences = {('-P00',),('-W00',)} #CNF ... and arr[i] and arr[i+1] and ..
 
-    def registerBreezeAt(self,x,y):
-        # Bxy
-        self.sentences.add(('B'+str(x)+str(y),))
-        self.sentences.add(('-P'+str(x)+str(y),))
-        # Bxy <=> (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
+    def registerConjuctionAdjacent(self,e,x,y):
+        if(x < self.size - 1):
+            self.sentences.add((e+str(x+1)+str(y),))
+        if(y < self.size - 1):
+            self.sentences.add((e+str(x)+str(y+1),))
+        if(x > 0):
+            self.sentences.add((e+str(x-1)+str(y),))
+        if(y > 0):
+            self.sentences.add((e+str(x)+str(y-1),))
 
-        # Bxy => (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) &&
-        # (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) => Bxy
-
-        # ((Px+1,y || Px-1,y || Px,y+1 || Px,y-1) || !Bxy) && 
-        # (Bxy || (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) )
-
-        # (Px+1,y || Px-1,y || Px,y+1 || Px,y-1)
-
+    def registerDisjuctionAdjacent(self,e,x,y):
         tmp = []
-
         if(x < self.size - 1):
-            tmp.append('P'+str(x+1)+str(y))
+            tmp.append(e+str(x+1)+str(y))
         if(y < self.size - 1):
-            tmp.append('P'+str(x)+str(y+1))
+            tmp.append(e+str(x)+str(y+1))
         if(x > 0):
-            tmp.append('P'+str(x-1)+str(y))
+            tmp.append(e+str(x-1)+str(y))
         if(y > 0):
-            tmp.append('P'+str(x)+str(y-1))
-
+            tmp.append(e+str(x)+str(y-1))
         self.sentences.add(tuple(tmp))
-
-
-    def registerNoBreezeAt(self,x,y):
-        #-Bxy
-        self.sentences.add(('-B'+str(x)+str(y),))
-        self.sentences.add(('-P'+str(x)+str(y),))
-
-        # Bxy <=> (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
-
-        # Bxy => (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) &&
-        # (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) => Bxy
-
-        # !(Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
-
-        #  (!Px+1,y && !Px-1,y && !Px,y+1 && !Px,y-1) 
-
-        if(x < self.size - 1):
-            self.sentences.add(('-P'+str(x+1)+str(y),))
-        if(y < self.size - 1):
-            self.sentences.add(('-P'+str(x)+str(y+1),))
-        if(x > 0):
-            self.sentences.add(('-P'+str(x-1)+str(y),))
-        if(y > 0):
-            self.sentences.add(('-P'+str(x)+str(y-1),))
-
-            
-    def registerStenchAt(self,x,y):
-        # Sxy
-        self.sentences.add(('S'+str(x)+str(y),))
-        # Sxy <=> (Wx+1,y || Wx-1,y || Wx,y+1 || Wx,y-1) 
-
-        tmp = []
-
-        if(x < self.size - 1):
-            tmp.append('W'+str(x+1)+str(y))
-        if(y < self.size - 1):
-            tmp.append('W'+str(x)+str(y+1))
-        if(x > 0):
-            tmp.append('W'+str(x-1)+str(y))
-        if(y > 0):
-            tmp.append('W'+str(x)+str(y-1))
-
-        self.sentences.add(tuple(tmp))
-
-    def registerNoStenchAt(self,x,y):
-        # -Sxy
-        self.sentences.add(('-S'+str(x)+str(y),))
-        self.sentences.add(('-W'+str(x)+str(y),))
-
-        # -Sxy <=> -(Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
-
-
-        if(x < self.size - 1):
-            self.sentences.add(('-W'+str(x+1)+str(y),))
-        if(y < self.size - 1):
-            self.sentences.add(('-W'+str(x)+str(y+1),))
-        if(x > 0):
-            self.sentences.add(('-W'+str(x-1)+str(y),))
-        if(y > 0):
-            self.sentences.add(('-W'+str(x)+str(y-1),))
-
 
     def tell(self, perception):
         x = perception['x']
         y = perception['y']
 
+        # Bxy <=> (Px+1,y || Px-1,y || Px,y+1 || Px,y-1) 
+        # -Bxy <=> (-Px+1,y && -Px-1,y && -Px,y+1 && -Px,y-1)
         if(perception['breeze']):
-            self.registerBreezeAt(x,y)
+            self.sentences.add(('B'+str(x)+str(y),))
+            self.sentences.add(('-P'+str(x)+str(y),))
+            self.registerDisjuctionAdjacent('P',x,y)
         else:
-            self.registerNoBreezeAt(x,y)
+            self.sentences.add(('-B'+str(x)+str(y),))
+            self.registerConjuctionAdjacent('-P',x,y)
+        # Sxy <=> (Wx+1,y || Wx-1,y || Wx,y+1 || Wx,y-1) 
+        # -Sxy <=> (-Wx+1,y && -Wx-1,y && -Wx,y+1 && -Wx,y-1)
         if(perception['stench']):
-            self.registerStenchAt(x,y)
+            self.sentences.add(('S'+str(x)+str(y),))
+            self.sentences.add(('-W'+str(x)+str(y),))
+            self.registerDisjuctionAdjacent('W',x,y)
         else:
-            self.registerNoStenchAt(x,y)
+            self.sentences.add(('-S'+str(x)+str(y),))
+            self.registerConjuctionAdjacent('-W',x,y)
 
     def resolve(self, c1, c2):
         result = set()
