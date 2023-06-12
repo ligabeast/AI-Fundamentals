@@ -36,19 +36,47 @@ class KnowledgeBase:
             tmp.append(e+str(x)+str(y-1))
         self.sentences.add(tuple(tmp))
 
-    def getDisjunctionAdjacent(self, e,x,y):
+    def registerHornClauses(self,e1,e2,x,y):
         tmp = []
+        tmp2 = []
+        tmp.append(e1+str(x)+str(y))
+        tmp2.append(e1+str(x)+str(y))
+
         if(x < self.size - 1):
-            tmp.append(e+str(x+1)+str(y))
-        if(y < self.size - 1):
-            tmp.append(e+str(x)+str(y+1))
+            tmp.append('-'+e1+str(x+1)+str(y))
         if(x > 0):
-            tmp.append(e+str(x-1)+str(y))
+            tmp.append('-'+e1+str(x-1)+str(y))
+        if(y < self.size - 1):
+            tmp2.append('-'+e1+str(x)+str(y+1))
         if(y > 0):
-            tmp.append(e+str(x)+str(y-1))
-        return tmp
+            tmp2.append('-'+e1+str(x)+str(y-1))
+
+        save1 = tmp.copy()
+        save2 = tmp2.copy()
+
+        if(y < self.size - 1):
+            tmp.append('-'+e1+str(x)+str(y+1))
+            self.sentences.add((tuple(tmp),(e2+str(x)+str(y+1),)))
+            if(y > 0):
+                self.sentences.add((tuple(tmp),(e2+str(x)+str(y-1),)))
+        if(y > 0):
+            save1.append('-'+e1+str(x)+str(y-1))
+            self.sentences.add((tuple(save1),(e2+str(x)+str(y-1),)))
+            if(y < self.size - 1):
+                self.sentences.add((tuple(save1),(e2+str(x)+str(y+1),)))
+
+        if(x < self.size - 1):
+            tmp2.append('-'+e1+str(x+1)+str(y))
+            self.sentences.add((tuple(tmp),(e2+str(x+1)+str(y),)))
+            if(x > 0):
+                self.sentences.add((tuple(tmp),(e2+str(x-1)+str(y),)))
+        if(x > 0):
+            save2.append('-'+e1+str(x-1)+str(y))
+            self.sentences.add((tuple(save2),(e2+str(x-1)+str(y),)))
+            if(x < self.size - 1):
+                self.sentences.add((tuple(save2),(e2+str(x+1)+str(y),)))
     
-    def registerMultipleHornClauses(self,t,p,x,y):
+    def registerAdjacentHornClauses(self,t,p,x,y):
         if(x < self.size - 1):
             self.sentences.add(((p+str(x)+str(y),),(t+str(x+1)+str(y),)))
         if(y < self.size - 1):
@@ -83,32 +111,28 @@ class KnowledgeBase:
                 self.sentences.add(('-S'+str(x)+str(y),))
                 self.registerConjuctionAdjacent('-W',x,y)
         else:
+            if(x < self.size - 1):
+                self.registerHornClauses('B','P',x+1,y)
+                self.registerHornClauses('S','W',x+1,y)
+            if(y < self.size - 1):
+                self.registerHornClauses('B','P',x,y+1)
+                self.registerHornClauses('S','W',x,y+1)
+            if(x > 0):
+                self.registerHornClauses('B','P',x-1,y)
+                self.registerHornClauses('S','W',x-1,y)
+            if(y > 0):
+                self.registerHornClauses('B','P',x,y-1)
+                self.registerHornClauses('S','W',x,y-1)
             if(perception['breeze']):
-                if(x < self.size - 1):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('B',x+1,y))),('P'+str(x+1)+str(y),)))
-                if(y < self.size - 1):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('B',x,y+1))),('P'+str(x)+str(y+1),)))
-                if(x > 0):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('B',x-1,y))),('P'+str(x-1)+str(y),)))
-                if(y > 0):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('B',x,y-1))),('P'+str(x)+str(y-1),)))
                 self.sentences.add(('B'+str(x)+str(y),))
             else:
                 self.sentences.add(('-B'+str(x)+str(y),))
-                self.registerMultipleHornClauses('-P','-B',x,y)
+                self.registerConjuctionAdjacent('-P',x,y)
             if(perception['stench']):
-                if(x < self.size - 1):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('S',x+1,y))),('W'+str(x+1)+str(y),)))
-                if(y < self.size - 1):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('S',x,y+1))),('W'+str(x)+str(y+1),)))
-                if(x > 0):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('S',x-1,y))),('W'+str(x-1)+str(y),)))
-                if(y > 0):
-                    self.sentences.add(((tuple(self.getDisjunctionAdjacent('S',x,y-1))),('W'+str(x)+str(y-1),)))
                 self.sentences.add(('S'+str(x)+str(y),))
             else:
                 self.sentences.add(('-S'+str(x)+str(y),))
-                self.registerMultipleHornClauses('-W','-S',x,y)
+                self.registerConjuctionAdjacent('-W',x,y)
 
 
     def forwardChaining(self, query):
@@ -122,6 +146,8 @@ class KnowledgeBase:
                 inferred[item] = False
                 if(item[0] == query):
                     return True
+                if(item[0] == '-'+query):
+                    return False
             else: 
                 for items in item:
                         inferred[items] = False
@@ -141,7 +167,6 @@ class KnowledgeBase:
                         for add in self.findAllConclusion(item):
                             agenda.put(add)
         return False
-
 
     def findAllPremises(self,q):
         result = set()
