@@ -1,8 +1,8 @@
 {
   "Config": {
     "Include": "True",
-    "Pit": [[1, 0]],
-    "Wumpus": [1, 3],
+    "Pit": [[2, 0]],
+    "Wumpus": [0, 2],
     "Gold": [3, 3]
   }
 }

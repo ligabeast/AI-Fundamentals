@@ -6,6 +6,7 @@ wumpus_env.reset()
 wumpus_env.render()
 
 while True:
+
     action = int(input("Action: "))
     wumpus_env.step(action)
     wumpus_env.render()
