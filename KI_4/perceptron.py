@@ -50,5 +50,5 @@ if __name__ == "__main__":
                      [0,1,1]]),
                     numpy.array([0,1,1,0])
                     )
-    obj.train(1000)
+    obj.train(1000000)
     obj.userMode()
