@@ -61,12 +61,11 @@ class FeedFowardNetwork:
     def scorecard(self, it):
         fail = 0
         for i in range(it):
-            image = np.array(self.test_X[i]).flatten()
             input_vec = self.imageConverter(np.array(self.test_X[i]).flatten())
             o,h = self.think([input_vec])
             if(np.argmax(o) != self.test_Y[i]):
                 fail += 1
-        print("After "+str(it)+" Iterations: "+str(1 - fail/it)+"% right decisions")
+        print("After "+str(it)+" Iterations: "+str((it - fail)/it)+"% right decisions")
 
 
     def imageConverter(self, image):
@@ -109,7 +108,7 @@ if __name__ == "__main__":
     input_nodes = 784 #28*28 pixel
     hidden_nodes = 200 #voodoo magic number
     output_nodes = 10 #numbers from [0:9]
-    training_samples = 1000
+    training_samples = 200
 
     learning_rate = 0.15 #feel free to play around with
 
