@@ -34,9 +34,9 @@ class FeedFowardNetwork:
 
     def sigmoid(self,gamma):
         if gamma < 0:
-            return 1.0 - 1.0/(1.0 + math.exp(gamma))
+            return 1.0 - 1.0/(1.0 + np.exp(gamma))
         else:
-            return 1.0/(1.0 + math.exp(-gamma))
+            return 1.0/(1.0 + np.exp(-gamma))
     
     def sigmoid_derivative(self,x):
         return self.sigmoid(x) * (1 - self.sigmoid(x))
@@ -109,11 +109,11 @@ if __name__ == "__main__":
     input_nodes = 784 #28*28 pixel
     hidden_nodes = 200 #voodoo magic number
     output_nodes = 10 #numbers from [0:9]
-    training_samples = 500
+    training_samples = 1000
 
-    learning_rate = 0.3 #feel free to play around with
+    learning_rate = 0.15 #feel free to play around with
 
     obj = FeedFowardNetwork(input_nodes,hidden_nodes,output_nodes, learning_rate, training_samples)
-    obj.train(1000)
+    obj.train(2000)
     obj.scorecard(1000)
     #obj.userMode()
