@@ -108,11 +108,14 @@ if __name__ == "__main__":
     input_nodes = 784 #28*28 pixel
     hidden_nodes = 200 #voodoo magic number
     output_nodes = 10 #numbers from [0:9]
-    training_samples = 200
+    training_samples = 400
+    training_quantity = 500
+    test_quantity = 100
 
     learning_rate = 0.15 #feel free to play around with
 
     obj = FeedFowardNetwork(input_nodes,hidden_nodes,output_nodes, learning_rate, training_samples)
-    obj.train(2000)
-    obj.scorecard(1000)
+    obj.train(training_quantity)
+    obj.scorecard(test_quantity)
     #obj.userMode()
+
