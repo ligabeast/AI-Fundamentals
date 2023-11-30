@@ -90,3 +90,5 @@ learning_rate = 0.15  # feel free to play around with
 These variables allow users to customize the neural network's architecture and training parameters, providing a flexible environment for experimentation.
 
 For detailed instructions and application examples, please refer to the corresponding project directory.
+
+![image](https://github.com/ligabeast/ai/assets/114762651/97e84d4d-dbcf-466d-9ad6-71000e638e48)
