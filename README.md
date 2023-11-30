@@ -1,5 +1,3 @@
-**README for GitHub Repository: "AI-Fundamentals"**
-
 # AI Fundamentals
 
 Welcome to my GitHub repository "AI-Fundamentals"! This repository contains several AI applications designed to learn the basics of artificial intelligence. The different projects cover various aspects of AI, ranging from graph search algorithms to solving the 8-Queens problem, implementing a knowledge base for the Wumpus game, and creating a feedforward neural network for handwriting recognition.
